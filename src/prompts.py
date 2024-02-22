@@ -32,11 +32,11 @@ class RAGPromptTemplates:
         {query}
         If you don't know the answer, just say that you don't know. Keep the answer concise. <-- instruct2
         """
-        prompt = f"{instruct1}"
+        prompt = f"{instruct1}\n"
         prompt +="-----\n{context}\n------\n"
         prompt += f"{query}"
         prompt += "\n{query}\n\n"
-        prompt += f"{instruct2}"
+        prompt += f"{instruct2}\n"
         return PromptTemplate(template=prompt, input_variables=["context", "query"])
 
     @staticmethod

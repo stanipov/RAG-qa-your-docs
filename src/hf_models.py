@@ -7,12 +7,11 @@ strategy/parameters, just keep the API the same.
 2024
 """
 
-from langchain.embeddings import CacheBackedEmbeddings, HuggingFaceEmbeddings
-from langchain.storage import LocalFileStore
+
 from langchain.llms import HuggingFacePipeline
-from langchain.embeddings import CacheBackedEmbeddings, HuggingFaceEmbeddings
 from torch import bfloat16
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndBytesConfig
+
 
 class Engine:
     def_bnb_cfg = BitsAndBytesConfig(
@@ -21,12 +20,13 @@ class Engine:
         bnb_4bit_use_double_quant=True,
         bnb_4bit_compute_dtype=bfloat16
     )
-    def __init__(self, model_id:str, cache_fld:str=None,
-                 quant_config:BitsAndBytesConfig=None,
-                 device_map:str='auto',
-                 max_new_tokens:int=2048,
-                 top_k:int=10,
-                 penalty_alpha:float=0.6
+
+    def __init__(self, model_id: str, cache_fld: str = None,
+                 quant_config: BitsAndBytesConfig = None,
+                 device_map: str = 'auto',
+                 max_new_tokens: int = 2048,
+                 top_k: int = 10,
+                 penalty_alpha: float = 0.6
                  ):
         """
         Init the wrapper class.
@@ -36,6 +36,9 @@ class Engine:
         """
         if not quant_config:
             self.__quant_config = self.def_bnb_cfg
+        else:
+            self.__quant_config = quant_config
+
         self.__model_config = AutoConfig.from_pretrained(model_id)
         self.__model_id = model_id
         self.__device_map = device_map
@@ -48,6 +51,7 @@ class Engine:
         """ Loads the model and the tokenizer """
         self.__load_llm()
         self.__load_tokenizer()
+
     def __load_llm(self):
         """ Loads HF model with quantization """
         self.llm_core_model = AutoModelForCausalLM.from_pretrained(
@@ -56,13 +60,14 @@ class Engine:
             config=self.__model_config,
             quantization_config=self.__quant_config,
             device_map=self.__device_map,
-            cache_dir=self.__cache_fld
+            cache_dir=self.__cache_folder
         )
+
     def __load_tokenizer(self):
         """ Loads the tokenizer """
-        self.tokenizer = AutoTokenizer.from_pretrained(self.__model_id, cache_dir=self.__model_cache)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.__model_id, cache_dir=self.__cache_folder)
 
-    def set_pipeline(self, batch_size:int=4):
+    def set_pipeline(self, batch_size: int = 4):
         """ Sets the generation pipeline. Change the contrastive search args if needed and call this method again"""
         pipe = pipeline(
             model=self.llm_core_model,
@@ -74,4 +79,10 @@ class Engine:
             max_new_tokens=self.max_new_tokens
         )
         self.llm = HuggingFacePipeline(pipeline=pipe,
-                                   batch_size=batch_size)
+                                       batch_size=batch_size)
+
+    def get_llm(self):
+        return self.llm
+
+    def get_tokenizer(self):
+        return self.tokenizer

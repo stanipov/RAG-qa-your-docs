@@ -25,7 +25,7 @@ class Engine:
                  quant_config: BitsAndBytesConfig = None,
                  device_map: str = 'auto',
                  max_new_tokens: int = 2048,
-                 top_k: int = 10,
+                 top_k: int = 4,
                  penalty_alpha: float = 0.6
                  ):
         """
